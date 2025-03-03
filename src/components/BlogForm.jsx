@@ -1,39 +1,44 @@
 import { useState } from "react";
+import { X, Image as ImageIcon } from "lucide-react";
 
 export default function BlogForm() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [subTitles, setSubTitles] = useState([]);
-  const [subContents, setSubContents] = useState([]);
+  const [subSections, setSubSections] = useState([]);
+  const [thumbnail, setThumbnail] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
-  const addSubTitle = () => {
-    setSubTitles([...subTitles, ""]);
-  };
-
-  const addSubContent = () => {
-    setSubContents([...subContents, ""]);
+  const addSubSection = () => {
+    setSubSections([...subSections, { subTitle: "", subContent: "" }]);
   };
 
-  const updateSubTitle = (index, value) => {
-    const updatedSubTitles = [...subTitles];
-    updatedSubTitles[index] = value;
-    setSubTitles(updatedSubTitles);
+  const updateSubSections = (index, field, value) => {
+    const updatedSubSections = [...subSections];
+    updatedSubSections[index][field] = value;
+    setSubSections(updatedSubSections);
   };
 
-  const updateSubContent = (index, value) => {
-    const updatedSubContents = [...subContents];
-    updatedSubContents[index] = value;
-    setSubContents(updatedSubContents);
+  const deleteSubSections = (index) => {
+    const updatedSubSections = [...subSections];
+    updatedSubSections.splice(index, 1);
+    setSubSections(updatedSubSections);
   };
-  const deleteSubTitle = (index) => {
-    const updatedSubTitles = [...subTitles];
-    updatedSubTitles.splice(index, 1);
-    setSubTitles(updatedSubTitles);
+
+  const handleThumbnailChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setThumbnail(file);
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+    }
   };
-  const deleteSubContent = (index) => {
-    const updatedSubContents = [...subContents];
-    updatedSubContents.splice(index, 1);
-    setSubContents(updatedSubContents);
+
+  const removeThumbnail = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setThumbnail(null);
+    setPreviewUrl(null);
   };
 
   const handleSubmit = (e) => {
@@ -41,8 +46,8 @@ export default function BlogForm() {
     console.log({
       title,
       content,
-      subTitles,
-      subContents,
+      subSections,
+      thumbnail,
     });
   };
 
@@ -67,34 +72,6 @@ export default function BlogForm() {
           required
         />
       </div>
-      <div className="space-y-4">
-        <h3 className="text-sm font-medium text-gray-700">Sub-Titles</h3>
-        {subTitles.map((subTitle, index) => (
-          <div key={`subtitle-${index}`} className="space-y-1">
-            <input
-              type="text"
-              value={subTitle}
-              onChange={(e) => updateSubTitle(index, e.target.value)}
-              placeholder={`Sub-title ${index + 1}`}
-              className="block w-full rounded-md border-gray-300 shadow-sm h-10 p-2"
-            />
-            <button
-              type="button"
-              onClick={() => deleteSubTitle(index)}
-              className="p-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 transition transform hover:scale-105"
-            >
-              Delete
-            </button>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={addSubTitle}
-          className="px-3 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition transform hover:scale-105"
-        >
-          Add Sub-title
-        </button>
-      </div>
 
       <div className="space-y-2">
         <label
@@ -113,32 +90,106 @@ export default function BlogForm() {
         ></textarea>
       </div>
 
+      <div className="space-y-3">
+        <label
+          htmlFor="thumbnail"
+          className="block text-md font-medium text-gray-700"
+        >
+          Thumbnail Image
+        </label>
+
+        {!previewUrl ? (
+          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-blue-400 transition-colors duration-200">
+            <div className="space-y-1 text-center">
+              <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
+              <div className="flex text-sm text-gray-600">
+                <label
+                  htmlFor="thumbnail"
+                  className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
+                >
+                  <span>Upload a file</span>
+                  <input
+                    id="thumbnail"
+                    name="thumbnail"
+                    type="file"
+                    className="sr-only"
+                    onChange={handleThumbnailChange}
+                    accept="image/*"
+                  />
+                </label>
+                <p className="pl-1">or drag and drop</p>
+              </div>
+              <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+            </div>
+          </div>
+        ) : (
+          <div className="relative mt-2 rounded-lg overflow-hidden border border-gray-200">
+            <img
+              src={previewUrl}
+              alt="Thumbnail preview"
+              className="w-full max-h-96 object-contain"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={removeThumbnail}
+                className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 transition"
+                title="Remove image"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white px-3 py-1 text-sm truncate">
+              {thumbnail?.name}
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="space-y-4">
-        <h3 className="text-sm font-medium text-gray-700">Sub-Contents</h3>
-        {subContents.map((subContent, index) => (
-          <div key={`subcontent-${index}`} className="space-y-1">
+        <h3 className="text-sm font-medium text-gray-700">Sub-Sections</h3>
+        {subSections.map((subSection, index) => (
+          <div
+            key={`subsection-${index}`}
+            className="relative border border-gray-200 rounded-md p-4"
+          >
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex-grow">
+                <input
+                  type="text"
+                  value={subSection.subTitle}
+                  onChange={(e) =>
+                    updateSubSections(index, "subTitle", e.target.value)
+                  }
+                  placeholder={`Sub-Title ${index + 1}`}
+                  className="block w-full rounded-md border-gray-300 shadow-sm p-2"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => deleteSubSections(index)}
+                className="ml-2 p-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 transition transform hover:scale-105"
+              >
+                Delete
+              </button>
+            </div>
             <textarea
-              value={subContent}
-              onChange={(e) => updateSubContent(index, e.target.value)}
-              placeholder={`Sub-content ${index + 1}`}
-              rows={3}
+              value={subSection.subContent}
+              onChange={(e) =>
+                updateSubSections(index, "subContent", e.target.value)
+              }
+              rows={4}
+              placeholder={`Sub-Content ${index + 1}`}
               className="block w-full rounded-md border-gray-300 shadow-sm p-2"
             ></textarea>
-            <button
-              type="button"
-              onClick={() => deleteSubContent(index)}
-              className="p-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 transition transform hover:scale-105"
-            >
-              Delete
-            </button>
           </div>
         ))}
         <button
           type="button"
-          onClick={addSubContent}
+          onClick={addSubSection}
           className="px-3 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition transform hover:scale-105"
         >
-          Add Sub-content
+          Add Sub-Section
         </button>
       </div>
 
